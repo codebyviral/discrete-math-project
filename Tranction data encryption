@@ -1,0 +1,29 @@
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+from Crypto.Random import get_random_bytes
+import base64
+
+def encrypt_transaction(transaction_data, key):
+    cipher = AES.new(key, AES.MODE_CBC)
+    ct_bytes = cipher.encrypt(pad(transaction_data.encode(), AES.block_size))
+    return base64.b64encode(cipher.iv + ct_bytes).decode('utf-8')
+
+def decrypt_transaction(encrypted_transaction, key):
+    encrypted_bytes = base64.b64decode(encrypted_transaction)
+    iv = encrypted_bytes[:AES.block_size]
+    ciphertext = encrypted_bytes[AES.block_size:]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = unpad(cipher.decrypt(ciphertext), AES.block_size)
+    return plaintext.decode()
+
+# Example usage
+key = get_random_bytes(16)  # AES-128 key
+transaction_details = "Transaction: $100 to Account: 987654321"
+
+# Encrypting transaction details
+encrypted_transaction = encrypt_transaction(transaction_details, key)
+print(f"Encrypted Transaction: {encrypted_transaction}")
+
+# Decrypting transaction details
+decrypted_transaction = decrypt_transaction(encrypted_transaction, key)
+print(f"Decrypted Transaction: {decrypted_transaction}")
